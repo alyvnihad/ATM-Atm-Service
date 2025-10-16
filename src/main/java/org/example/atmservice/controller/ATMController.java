@@ -19,6 +19,11 @@ public class ATMController {
         return atmService.login(authRequest);
     }
 
+    @GetMapping("/balance")
+    public String balance(){
+        return atmService.balance();
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody AuthRequest authRequest){
         atmService.logout(authRequest);
