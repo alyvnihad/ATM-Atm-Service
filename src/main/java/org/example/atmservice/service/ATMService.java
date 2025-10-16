@@ -22,6 +22,8 @@ public class ATMService {
     @Value("${auth.url}")
     private String authUrl;
 
+    @Value("${account.url}")
+    private String accountUrl;
 
     private Long atmId;
     private Long cardNumber = null;
@@ -33,6 +35,17 @@ public class ATMService {
         atmId = atm.getId();
         cardNumber = authRequest.getCardNumber();
         return response.getBody();
+    }
+
+    public String balance() {
+        if (cardNumber != null) {
+            AccountRequest request = new AccountRequest();
+            request.setCardNumber(cardNumber);
+            ResponseEntity<Double> response = restTemplate.postForEntity(accountUrl + "/balance", request, Double.class);
+            return "Balance: " + response.getBody();
+        } else {
+            throw new RuntimeException("Login please");
+        }
     }
 
     public void logout(AuthRequest authRequest) {
