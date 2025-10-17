@@ -37,6 +37,15 @@ public class ATMService {
         return response.getBody();
     }
 
+    public void deposit(AccountRequest request) {
+        if (cardNumber != null) {
+            request.setCardNumber(cardNumber);
+            restTemplate.postForEntity(accountUrl + "/deposit", request, AccountRequest.class);
+        } else {
+            throw new RuntimeException("Login please");
+        }
+    }
+
     public String balance() {
         if (cardNumber != null) {
             AccountRequest request = new AccountRequest();
