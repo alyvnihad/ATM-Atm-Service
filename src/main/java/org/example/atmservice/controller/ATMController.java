@@ -1,6 +1,7 @@
 package org.example.atmservice.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.example.atmservice.dto.AccountRequest;
 import org.example.atmservice.dto.AuthRequest;
 import org.example.atmservice.dto.AuthResponse;
 import org.example.atmservice.service.ATMService;
@@ -17,6 +18,16 @@ public class ATMController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest authRequest){
         return atmService.login(authRequest);
+    }
+
+    @PostMapping("/deposit")
+    public void deposit(@RequestBody AccountRequest request){
+        atmService.deposit(request);
+    }
+
+    @PostMapping("/withdraw")
+    public void withdraw(@RequestBody AccountRequest request){
+        atmService.withdraw(request);
     }
 
     @GetMapping("/balance")
