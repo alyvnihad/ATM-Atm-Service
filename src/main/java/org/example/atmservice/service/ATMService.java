@@ -46,6 +46,16 @@ public class ATMService {
         }
     }
 
+    public void withdraw(AccountRequest accountRequest) {
+        if (atmId != null && cardNumber != null) {
+            accountRequest.setAtmId(atmId);
+            accountRequest.setCardNumber(cardNumber);
+            restTemplate.postForEntity(accountUrl + "/withdraw", accountRequest, AccountRequest.class);
+        } else {
+            throw new RuntimeException("Login please");
+        }
+    }
+
     public String balance() {
         if (cardNumber != null) {
             AccountRequest request = new AccountRequest();
