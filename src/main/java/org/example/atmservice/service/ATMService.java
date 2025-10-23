@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-
+// Automated Teller Machine operations
 @Service
 @RequiredArgsConstructor
 public class ATMService {
@@ -28,6 +28,7 @@ public class ATMService {
     private Long atmId;
     private Long cardNumber = null;
 
+    // Login and save ATM session info
     public AuthResponse login(AuthRequest authRequest) {
         ResponseEntity<AuthResponse> response = restTemplate.postForEntity(authUrl + "/login", authRequest, AuthResponse.class);
         ATM atm = new ATM();
@@ -37,8 +38,10 @@ public class ATMService {
         return response.getBody();
     }
 
+    // Deposit money to account
     public void deposit(AccountRequest request) {
-        if (cardNumber != null) {
+        if (atmId != null && cardNumber != null) {
+            request.setAtmId(atmId);
             request.setCardNumber(cardNumber);
             restTemplate.postForEntity(accountUrl + "/deposit", request, AccountRequest.class);
         } else {
@@ -46,6 +49,7 @@ public class ATMService {
         }
     }
 
+    // Withdraw money from account
     public void withdraw(AccountRequest accountRequest) {
         if (atmId != null && cardNumber != null) {
             accountRequest.setAtmId(atmId);
@@ -56,6 +60,7 @@ public class ATMService {
         }
     }
 
+    // Check account balance
     public String balance() {
         if (cardNumber != null) {
             AccountRequest request = new AccountRequest();
@@ -67,6 +72,7 @@ public class ATMService {
         }
     }
 
+    // Logout and clear session
     public void logout(AuthRequest authRequest) {
         restTemplate.postForEntity(authUrl + "/logout", authRequest, AuthRequest.class);
         cardNumber = null;
