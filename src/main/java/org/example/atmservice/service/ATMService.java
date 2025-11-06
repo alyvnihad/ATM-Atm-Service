@@ -7,9 +7,13 @@ import org.example.atmservice.dto.AuthResponse;
 import org.example.atmservice.model.ATM;
 import org.example.atmservice.repository.ATMRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
 
 // Automated Teller Machine operations
 @Service
@@ -27,6 +31,8 @@ public class ATMService {
 
     private Long atmId;
     private Long cardNumber = null;
+    private LocalDateTime expired_at = null;
+    private String token;
 
     // Login and save ATM session info
     public AuthResponse login(AuthRequest authRequest) {
@@ -35,15 +41,20 @@ public class ATMService {
         atmRepository.save(atm);
         atmId = atm.getId();
         cardNumber = authRequest.getCardNumber();
+        token = response.getBody().getRefreshToken();
+        expired_at = LocalDateTime.now().plusMinutes(5);
         return response.getBody();
     }
 
     // Deposit money to account
     public void deposit(AccountRequest request) {
-        if (atmId != null && cardNumber != null) {
+        if (atmId != null && cardNumber != null && expiresCheck()) {
             request.setAtmId(atmId);
             request.setCardNumber(cardNumber);
-            restTemplate.postForEntity(accountUrl + "/deposit", request, AccountRequest.class);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setBearerAuth(token);
+            HttpEntity<AccountRequest> entity = new HttpEntity<>(request,httpHeaders);
+            restTemplate.postForEntity(accountUrl + "/deposit", entity, AccountRequest.class);
         } else {
             throw new RuntimeException("Login please");
         }
@@ -51,10 +62,13 @@ public class ATMService {
 
     // Withdraw money from account
     public void withdraw(AccountRequest accountRequest) {
-        if (atmId != null && cardNumber != null) {
+        if (atmId != null && cardNumber != null && expiresCheck()) {
             accountRequest.setAtmId(atmId);
             accountRequest.setCardNumber(cardNumber);
-            restTemplate.postForEntity(accountUrl + "/withdraw", accountRequest, AccountRequest.class);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setBearerAuth(token);
+            HttpEntity<AccountRequest> entity = new HttpEntity<>(accountRequest,httpHeaders);
+            restTemplate.postForEntity(accountUrl + "/withdraw", entity, AccountRequest.class);
         } else {
             throw new RuntimeException("Login please");
         }
@@ -62,10 +76,13 @@ public class ATMService {
 
     // Check account balance
     public String balance() {
-        if (cardNumber != null) {
+        if (cardNumber != null && expiresCheck()) {
             AccountRequest request = new AccountRequest();
             request.setCardNumber(cardNumber);
-            ResponseEntity<Double> response = restTemplate.postForEntity(accountUrl + "/balance", request, Double.class);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setBearerAuth(token);
+            HttpEntity<AccountRequest> entity = new HttpEntity<>(request,httpHeaders);
+            ResponseEntity<Double> response = restTemplate.postForEntity(accountUrl + "/balance", entity, Double.class);
             return "Balance: " + response.getBody();
         } else {
             throw new RuntimeException("Login please");
@@ -74,7 +91,19 @@ public class ATMService {
 
     // Logout and clear session
     public void logout(AuthRequest authRequest) {
-        restTemplate.postForEntity(authUrl + "/logout", authRequest, AuthRequest.class);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth(token);
+        HttpEntity<AuthRequest> entity = new HttpEntity<>(authRequest,httpHeaders);
+        restTemplate.postForEntity(authUrl + "/logout", entity, AuthRequest.class);
         cardNumber = null;
+        expired_at = null;
+    }
+
+    private boolean expiresCheck(){
+        if(expired_at.isBefore(LocalDateTime.now())){
+            throw new RuntimeException("Time expires login try again");
+        }
+        expired_at = LocalDateTime.now().plusMinutes(5);
+        return true;
     }
 }
