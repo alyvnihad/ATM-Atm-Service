@@ -51,6 +51,7 @@ public class ATMService {
         if (atmId != null && cardNumber != null && expiresCheck()) {
             request.setAtmId(atmId);
             request.setCardNumber(cardNumber);
+            request.setToken(token);
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setBearerAuth(token);
             HttpEntity<AccountRequest> entity = new HttpEntity<>(request,httpHeaders);
