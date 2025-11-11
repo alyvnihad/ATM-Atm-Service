@@ -7,4 +7,5 @@ public class AccountRequest {
     private Long atmId;
     private Long cardNumber;
     private Double amount;
+    private String token;
 }
