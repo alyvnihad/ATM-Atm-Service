@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.example.atmservice.dto.AccountRequest;
 import org.example.atmservice.dto.AuthRequest;
 import org.example.atmservice.dto.AuthResponse;
+import org.example.atmservice.exception.ExpiredTimeException;
+import org.example.atmservice.exception.LoginException;
 import org.example.atmservice.model.ATM;
 import org.example.atmservice.repository.ATMRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,7 +59,7 @@ public class ATMService {
             HttpEntity<AccountRequest> entity = new HttpEntity<>(request,httpHeaders);
             restTemplate.postForEntity(accountUrl + "/deposit", entity, AccountRequest.class);
         } else {
-            throw new RuntimeException("Login please");
+            throw new LoginException("Login please");
         }
     }
 
@@ -71,7 +73,7 @@ public class ATMService {
             HttpEntity<AccountRequest> entity = new HttpEntity<>(accountRequest,httpHeaders);
             restTemplate.postForEntity(accountUrl + "/withdraw", entity, AccountRequest.class);
         } else {
-            throw new RuntimeException("Login please");
+            throw new LoginException("Login please");
         }
     }
 
@@ -86,7 +88,7 @@ public class ATMService {
             ResponseEntity<Double> response = restTemplate.postForEntity(accountUrl + "/balance", entity, Double.class);
             return "Balance: " + response.getBody();
         } else {
-            throw new RuntimeException("Login please");
+            throw new LoginException("Login please");
         }
     }
 
@@ -102,7 +104,7 @@ public class ATMService {
 
     private boolean expiresCheck(){
         if(expired_at.isBefore(LocalDateTime.now())){
-            throw new RuntimeException("Time expires login try again");
+            throw new ExpiredTimeException("Time expires login try again");
         }
         expired_at = LocalDateTime.now().plusMinutes(5);
         return true;
